@@ -1,6 +1,6 @@
 # LOVEHOST
 
-LoveHost es una herramienta de línea de comandos que permite escanear una red y detectar hosts activos. Está diseñada para ser utilizada por administradores de sistemas y profesionales de seguridad informática.
+LoveHost es una herramienta de línea de comandos que permite escanear una red y detectar hosts activos. Ahora podras ver cuantos sistemas estan conectados a tu red.
 
 ## Características
 
