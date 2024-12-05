@@ -5,9 +5,10 @@ LoveHost es una herramienta de línea de comandos que permite escanear una red y
 ## Características
 
 - Escaneo de redes IPv4
-- Detección de hosts activos basada en respuestas de ping
-- Salida formateada y legible
+- Detección de hosts activos basada en respuestas ICMP
 - Opciones de configuración personalizables
+- Soporte multiplataforma (Windows, Linux, macOS).
+- Generación de reporte de texto con los hosts activos encontrados.
 
 ## Requisitos
 
@@ -22,7 +23,8 @@ LoveHost es una herramienta de línea de comandos que permite escanear una red y
 2. Instalar los requisitos:
 - pip install -r requirements.txt
 
-![lovehostV1 2](https://github.com/Puerto4445/LoveHost/assets/166276555/908f6526-37dd-42a8-9e3c-8362d1a55a9a)
+![zappskred](https://github.com/user-attachments/assets/ab4ecf86-cdb3-4d1a-b187-b244a9d4431d)
+
 ## Autor
 -puerto4444
  
