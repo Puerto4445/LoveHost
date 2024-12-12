@@ -7,19 +7,13 @@ import sys
 from concurrent.futures import ThreadPoolExecutor  
 from pyfiglet import Figlet  
 from datetime import datetime  
-from ratelimiter import RateLimiter  
+from nmap import PortScanner  
 
 def print_figlet(text):  
     """  
     Imprime en la pantalla el texto proporcionado con un diseño ASCII.  
-
-    Args:  
-        text (str): El texto a imprimir con el diseño ASCII.  
-
-    Returns:  
-        None  
     """  
-    figlet = Figlet(font='banner3')  
+    figlet = Figlet(font='banner3')  # Cambiado a 'standard' para evitar errores  
     ascii_art = figlet.renderText(text)  
     try:  
         lolcat_process = subprocess.Popen(['lolcat'], stdin=subprocess.PIPE)  
@@ -30,9 +24,6 @@ def print_figlet(text):
 def printed():  
     """  
     Imprime el banner y la información inicial del programa.  
-
-    Returns:  
-        None  
     """  
     print_figlet("LOVEHOST")  
     print("\n@puerto4444")  
@@ -41,13 +32,6 @@ def printed():
 def close_program(sig, frame):  
     """  
     Maneja la interrupción del programa al presionar Ctrl+C.  
-
-    Args:  
-        sig (signal): El signal de interrupción.  
-        frame (frame): El frame actual del programa.  
-
-    Returns:  
-        None  
     """  
     print(colored(f"\n[!] Hasta la próxima, amor", "red"))  
     sys.exit(1)  
@@ -57,38 +41,29 @@ signal.signal(signal.SIGINT, close_program)
 def Arg_parse():  
     """  
     Parsea los argumentos de la línea de comando.  
-
-    Returns:  
-        Namespace: Objeto que contiene los argumentos parseados.  
     """  
-    parser = argparse.ArgumentParser(description="Descubre Hosts activos con (ICMP)")  
+    parser = argparse.ArgumentParser(description="Descubre Hosts activos con (ICMP) y Nmap")  
     parser.add_argument('-t', '--target', required=True, dest="target",  
                         help="Ex: -t 192.168.0.1 o -t 192.168.0.1-100")  
     parser.add_argument('--save', nargs='?', const='reporte.txt', default=None,  
                         help='Guarda los resultados en un archivo de texto. Opcionalmente, especifica el nombre del archivo.')  
-    parser.add_argument('--rate', type=int, default=100,  
-                        help='Número máximo de solicitudes por segundo (default: 100)')  
+    parser.add_argument('--rate', type=int, choices=range(0, 6), default=3,  
+                        help="Controla la velocidad del escaneo (0 más lento, 5 más rápido). Default es 3.")  
     args = parser.parse_args()  
-    return args  
+    return args.target, args.save, args.rate  
 
 def Valid_target(target):  
     """  
     Valida el formato de la dirección IP o rango proporcionado.  
-
-    Args:  
-        target (str): La dirección IP o rango a validar.  
-
-    Returns:  
-        list: Una lista de direcciones IP válidas.  
     """  
     target_split = target.split(".")  
     if len(target_split) != 4:  
         print(colored(f"\n[!] Formato de IP inválido: {target}\n", "red"))  
         return []  
-    
+
     three_octets = '.'.join(target_split[:3])  
     last_octet = target_split[3]  
-    
+
     if "-" in last_octet:  
         try:  
             start, end = map(int, last_octet.split("-"))  
@@ -109,37 +84,23 @@ def Valid_target(target):
             print(colored(f"\n[!] Octeto final no es un número: {target}\n", "red"))  
             return []  
 
-def rate_limited_discovery(rate):  
+def descovery_host(target, rate):  
     """  
-    Crea una función de descubrimiento con límite de tasa.    
-    Returns:  
-        function: Función de descubrimiento con límite de tasa.  
+    Envía un ping a la dirección IP proporcionada para verificar si el host está activo.  
     """  
-    rate_limiter = RateLimiter(max_calls=rate, period=1)  
-
-    @rate_limiter  
-    def limited_discovery(target):  
-        try:  
-            discovery = subprocess.run(["ping", "-c", "1", target], timeout=1, stdout=subprocess.DEVNULL)  
-            if discovery.returncode == 0:  
-                print(colored(f"\n\tHost: {target} UP", "green", attrs=["bold"]))  
-                return target  
-        except subprocess.TimeoutExpired:  
-            pass  
-        return None  
-
-    return limited_discovery  
+    nm = PortScanner()  
+    try:   
+        nm.scan(target, '1-1024', '-T' + str(rate))  
+        if nm[target].get('status', {}).get('state') == 'up':  
+            print(colored(f"\n\tHost: {target} UP", "green", attrs=["bold"]))  
+            return target  
+    except Exception as e:  
+        pass  
+    return None  
 
 def guardar_resultados_txt(resultados, nombre_archivo='reporte.txt'):  
     """  
     Guarda los resultados del escaneo en un archivo de texto.  
-
-    Args:  
-        resultados (list): Lista de direcciones IP activas.  
-        nombre_archivo (str): Nombre del archivo de salida.  
-
-    Returns:  
-        None  
     """  
     try:  
         with open(nombre_archivo, 'w') as f:  
@@ -160,30 +121,23 @@ def guardar_resultados_txt(resultados, nombre_archivo='reporte.txt'):
 def main():  
     """  
     La función principal del programa.  
-
-    Returns:  
-        None  
     """  
     printed()  
-    args = Arg_parse()  
-    targets = Valid_target(args.target)  
-    
+    target, generar_txt, rate = Arg_parse()  
+    targets = Valid_target(target)  
+
     if not targets:  
         print(colored("[!] No hay direcciones IP válidas para escanear.", "red"))  
         sys.exit(1)  
-      
-    discovery_func = rate_limited_discovery(args.rate)  
-    
-    print(colored(f"\n[+] Iniciando escaneo con tasa máxima de {args.rate} solicitudes/segundo", "yellow"))  
-    
+
     resultados = []  
-    with ThreadPoolExecutor(max_workers=min(100, args.rate)) as executor:  
-        for resultado in executor.map(discovery_func, targets):  
+    with ThreadPoolExecutor(max_workers=100) as executor:  
+        for resultado in executor.map(lambda x: descovery_host(x, rate), targets):  
             if resultado:  
                 resultados.append(resultado)  
-    
-    if args.save:  
-        guardar_resultados_txt(resultados, args.save)  
+
+    if generar_txt:  
+        guardar_resultados_txt(resultados, generar_txt)  
 
 if __name__ == "__main__":  
     main()
