@@ -1,4 +1,4 @@
 pyfiglet==1.0.2
 termcolor==2.4.0
 lolcat==1.4
-ratelimiter==1.2.0
+python-nmap==0.7.1
