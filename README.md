@@ -24,7 +24,8 @@ LoveHost es una herramienta de línea de comandos que permite escanear una red y
 2. Instalar los requisitos:
 - pip install -r requirements.txt
 
-![zappskred](https://github.com/user-attachments/assets/ab4ecf86-cdb3-4d1a-b187-b244a9d4431d)
+![LoveHost1 3_rate](https://github.com/user-attachments/assets/cb985755-6a59-45dc-a8c0-deb20975e5e0)
+
 
 ## Autor
 -puerto4444
