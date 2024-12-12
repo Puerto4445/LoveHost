@@ -7,8 +7,9 @@ LoveHost es una herramienta de línea de comandos que permite escanear una red y
 - Escaneo de redes IPv4
 - Detección de hosts activos basada en respuestas ICMP
 - Opciones de configuración personalizables
-- Soporte multiplataforma (Windows, Linux, macOS).
+- Soporte multiplataforma Linux.
 - Generación de reporte de texto con los hosts activos encontrados.
+- Manejo de rate por segundo
 
 ## Requisitos
 
